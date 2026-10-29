@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUEL JINAKKAN BOM WAKTU</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --led-red: #ff073a;
+            --led-green: #39ff14;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #000;
+            color: white;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- LAYAR MULAI --- */
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            text-align: center;
+        }
+
+        #start-screen h1 {
+            font-size: 70px;
+            color: var(--led-red);
+            text-shadow: 0 0 20px var(--led-red);
+            margin-bottom: 20px;
+        }
+
+        .btn-start {
+            padding: 20px 60px;
+            font-size: 30px;
+            font-weight: bold;
+            background: #ff073a;
+            color: white;
+            border: 3px solid #fff;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 0 20px #ff073a;
+            transition: 0.2s;
+            margin-top: 20px;
+        }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* --- LAYOUT DUEL --- */
+        .player-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-right: 4px solid #444;
+        }
+        
+        .p1-bg { background: radial-gradient(circle at top, #34495e, #111); }
+        .p2-bg { background: radial-gradient(circle at top, #5b2c6f, #111); border-right: none;}
+
+        .player-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            letter-spacing: 2px;
+        }
+
+        /* --- AREA BOM --- */
+        .bomb-area {
+            flex: 0.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .c4-block {
+            background: #8b0000;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 20px rgba(0,0,0,0.5);
+            border: 3px solid #550000;
+            margin-bottom: 15px;
+        }
+
+        .digital-timer {
+            background: #050505;
+            color: var(--led-red);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 55px;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 10px;
+            border: 4px solid #333;
+            text-shadow: 0 0 15px var(--led-red);
+        }
+
+        .critical { animation: flashAlert 0.4s infinite; }
+
+        @keyframes flashAlert {
+            0%, 100% { color: var(--led-red); text-shadow: 0 0 20px var(--led-red); }
+            50% { color: #550000; text-shadow: none; }
+        }
+
+        .shake { animation: shakeScreen 0.4s ease-in-out; }
+        @keyframes shakeScreen {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-20px); }
+            40% { transform: translateX(20px); }
+            60% { transform: translateX(-20px); }
+            80% { transform: translateX(20px); }
+        }
+
+        /* Kabel Bom */
+        .cables-rack {
+            display: flex;
+            gap: 12px;
+            background: #222;
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: 2px solid #555;
+        }
+
+        .cable {
+            width: 13px;
+            height: 55px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .c1 { background: #e74c3c; }
+        .c2 { background: #f1c40f; }
+        .c3 { background: #3498db; }
+        .c4 { background: #2ecc71; }
+        .c5 { background: #9b59b6; }
+        .c6 { background: #e67e22; }
+        .c7 { background: #1abc9c; }
+        .c8 { background: #e84393; }
+
+        .cable-cut {
+            opacity: 0.2;
+            height: 15px;
+            margin-top: 40px;
+            border-top: 3px dashed #000;
+        }
+
+        /* --- AREA KUIS --- */
+        .quiz-panel {
+            flex: 0.5;
+            background: rgba(255, 255, 255, 0.95);
+            color: #111;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            margin: 0 15px;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
+        }
+
+        .q-text {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .btn-opt {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            border: 3px solid #ccc;
+            background: #fff;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 5px 0 #ccc;
+        }
+
+        .btn-opt:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #ccc;
+            background: #eee;
+        }
+
+        /* --- EFEK KHUSUS --- */
+        .explosion-fx {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, #fff, #ff5722, #8b0000);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 150px;
+            animation: blastAnim 1.5s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes blastAnim {
+            0% { transform: scale(0); opacity: 1; }
+            30% { transform: scale(1.5); opacity: 1; background-color: white;}
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .defused-fx {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 50, 0, 0.85);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: safeGlow 2s infinite;
+        }
+
+        .defused-fx h2 {
+            font-size: 60px;
+            color: var(--led-green);
+            text-shadow: 0 0 30px var(--led-green);
+            margin: 0;
+        }
+
+        @keyframes safeGlow {
+            0%, 100% { box-shadow: inset 0 0 50px var(--led-green); }
+            50% { box-shadow: inset 0 0 150px var(--led-green); }
+        }
+
+        #global-end-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Layar Mulai -->
+    <div id="start-screen">
+        <h1>DUEL JINAKKAN BOM</h1>
+        <p style="font-size: 24px; max-width: 800px;">
+            MATERI: <strong>ASMAUL HUSNA</strong>.<br>
+            Masing-masing pemain bermain sendiri untuk memotong <strong>8 KABEL</strong>.<br>
+            Waktu <strong>90 DETIK</strong>.<br> 
+            Jawaban salah = <strong>Waktu dikurangi 5 Detik & Ganti Soal!</strong>
+        </p>
+        <button class="btn-start" onclick="startGame()">MULAI DUEL</button>
+    </div>
+
+    <!-- AREA PEMAIN 1 -->
+    <div class="player-zone p1-bg" id="zone-1">
+        <div class="player-title">SISWA 1</div>
+        <div class="bomb-area" id="bomb-1">
+            <div class="c4-block">
+                <div class="digital-timer" id="timer-1">01:30</div>
+            </div>
+            <div class="cables-rack" id="cables-1">
+                <div class="cable c1"></div>
+                <div class="cable c2"></div>
+                <div class="cable c3"></div>
+                <div class="cable c4"></div>
+                <div class="cable c5"></div>
+                <div class="cable c6"></div>
+                <div class="cable c7"></div>
+                <div class="cable c8"></div>
+            </div>
+        </div>
+        <div class="quiz-panel">
+            <div class="q-text" id="q-1">MENYIAPKAN SISTEM...</div>
+            <div class="options-grid" id="opts-1"></div>
+        </div>
+    </div>
+
+    <!-- AREA PEMAIN 2 -->
+    <div class="player-zone p2-bg" id="zone-2">
+        <div class="player-title">SISWA 2</div>
+        <div class="bomb-area" id="bomb-2">
+            <div class="c4-block">
+                <div class="digital-timer" id="timer-2">01:30</div>
+            </div>
+            <div class="cables-rack" id="cables-2">
+                <div class="cable c1"></div>
+                <div class="cable c2"></div>
+                <div class="cable c3"></div>
+                <div class="cable c4"></div>
+                <div class="cable c5"></div>
+                <div class="cable c6"></div>
+                <div class="cable c7"></div>
+                <div class="cable c8"></div>
+            </div>
+        </div>
+        <div class="quiz-panel">
+            <div class="q-text" id="q-2">MENYIAPKAN SISTEM...</div>
+            <div class="options-grid" id="opts-2"></div>
+        </div>
+    </div>
+
+    <!-- Layar Akhir Global -->
+    <div id="global-end-screen" class="hidden">
+        <h1 style="font-size: 60px; margin-bottom: 20px;">PERMAINAN SELESAI</h1>
+        <div id="final-winner-text" style="font-size: 32px; margin-bottom: 40px; line-height: 1.6;"></div>
+        <button class="btn-start" onclick="location.reload()">MAIN LAGI</button>
+    </div>
+
+    <!-- Audio Effects -->
+    <audio id="sfx-tick" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" loop></audio>
+    <audio id="sfx-cut" src="https://assets.mixkit.co/active_storage/sfx/722/722-preview.mp3"></audio>
+    <audio id="sfx-wrong" src="https://assets.mixkit.co/active_storage/sfx/1643/1643-preview.mp3"></audio>
+    <audio id="sfx-boom" src="https://assets.mixkit.co/active_storage/sfx/1701/1701-preview.mp3"></audio>
+    <audio id="sfx-win" src="https://assets.mixkit.co/active_storage/sfx/2285/2285-preview.mp3"></audio>
+
+    <script>
+        const questionBank = [
+            { q: "AL-GAFFAR", a: ["MAHA PENGAMPUN", "MAHA PEMAAF", "MAHA TUNGGAL", "MAHA MANDIRI"], c: "MAHA PENGAMPUN" },
+            { q: "AL-'AFUW", a: ["MAHA PEMAAF", "MAHA PENGAMPUN", "MAHA MENGHIDUPKAN", "MAHA MEMATIKAN"], c: "MAHA PEMAAF" },
+            { q: "AL-AHAD", a: ["MAHA TUNGGAL", "MAHA DIBUTUHKAN", "MAHA MANDIRI", "MAHA MEMBANGKITKAN"], c: "MAHA TUNGGAL" },
+            { q: "AS-SAMAD", a: ["MAHA DIBUTUHKAN", "MAHA TUNGGAL", "MAHA PENGAMPUN", "MAHA PEMAAF"], c: "MAHA DIBUTUHKAN" },
+            { q: "AL-MUHYI", a: ["MAHA MENGHIDUPKAN", "MAHA MEMATIKAN", "MAHA MANDIRI", "MAHA MEMBANGKITKAN"], c: "MAHA MENGHIDUPKAN" },
+            { q: "AL-MUMIT", a: ["MAHA MEMATIKAN", "MAHA MENGHIDUPKAN", "MAHA PENGAMPUN", "MAHA PEMAAF"], c: "MAHA MEMATIKAN" },
+            { q: "AL-QAYYUM", a: ["MAHA MANDIRI", "MAHA DIBUTUHKAN", "MAHA TUNGGAL", "MAHA MEMBANGKITKAN"], c: "MAHA MANDIRI" },
+            { q: "AL-BA'ITS", a: ["MAHA MEMBANGKITKAN", "MAHA MENGHIDUPKAN", "MAHA MEMATIKAN", "MAHA MANDIRI"], c: "MAHA MEMBANGKITKAN" }
+        ];
+
+        let p1 = { time: 90, cut: 0, qIdx: 0, questions: [], isDone: false };
+        let p2 = { time: 90, cut: 0, qIdx: 0, questions: [], isDone: false };
+        let gameTimer;
+        let gameActive = false;
+
+        // --- SISTEM AUDIO AMAN (ANTI ERROR) ---
+        function safePlayAudio(id) {
+            try {
+                const audio = document.getElementById(id);
+                if (audio) {
+                    audio.currentTime = 0;
+                    let playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => { console.warn("Audio diblokir:", error); });
+                    }
+                }
+            } catch (e) {
+                console.warn("Error audio:", e);
+            }
+        }
+
+        function safePauseAudio(id) {
+            try {
+                const audio = document.getElementById(id);
+                if (audio) audio.pause();
+            } catch (e) {}
+        }
+
+        function safeSpeedAudio(id, speed) {
+            try {
+                const audio = document.getElementById(id);
+                if (audio) audio.playbackRate = speed;
+            } catch (e) {}
+        }
+        // ----------------------------------------
+
+        function shuffle(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startGame() {
+            document.getElementById("start-screen").classList.add("hidden");
+            
+            p1.questions = shuffle(questionBank);
+            p2.questions = shuffle(questionBank);
+            
+            loadQuestion(1);
+            loadQuestion(2);
+            
+            gameActive = true;
+            gameTimer = setInterval(tickTime, 1000);
+            
+            safePlayAudio("sfx-tick");
+        }
+
+        function tickTime() {
+            if (!gameActive) return;
+
+            let isAnyonePlaying = false;
+            let needFastTick = false;
+
+            // Pembaruan Pemain 1
+            if (!p1.isDone) {
+                isAnyonePlaying = true;
+                p1.time--;
+                updateTimerUI(1, p1.time);
+                if (p1.time <= 15 && p1.time > 0) needFastTick = true;
+                if (p1.time <= 0) explodePlayer(1);
+            }
+
+            // Pembaruan Pemain 2
+            if (!p2.isDone) {
+                isAnyonePlaying = true;
+                p2.time--;
+                updateTimerUI(2, p2.time);
+                if (p2.time <= 15 && p2.time > 0) needFastTick = true;
+                if (p2.time <= 0) explodePlayer(2);
+            }
+
+            // Kecepatan suara detak
+            if (isAnyonePlaying) {
+                if (needFastTick) {
+                    safeSpeedAudio("sfx-tick", 1.5);
+                } else {
+                    safeSpeedAudio("sfx-tick", 1.0);
+                }
+            }
+        }
+
+        function updateTimerUI(pNum, timeLeft) {
+            const display = document.getElementById(`timer-${pNum}`);
+            const safeTime = Math.max(0, timeLeft);
+            const mins = Math.floor(safeTime / 60);
+            const secs = safeTime % 60;
+            display.innerText = (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
+
+            if (safeTime <= 15 && safeTime > 0) {
+                display.classList.add("critical");
+            } else {
+                display.classList.remove("critical");
+            }
+        }
+
+        function loadQuestion(pNum) {
+            const p = pNum === 1 ? p1 : p2;
+            if (p.isDone) return;
+
+            if (p.qIdx >= p.questions.length) {
+                p.qIdx = 0;
+                p.questions = shuffle(questionBank);
+            }
+
+            const data = p.questions[p.qIdx];
+            const opts = shuffle(data.a);
+            
+            document.getElementById(`q-${pNum}`).innerText = data.q;
+            const grid = document.getElementById(`opts-${pNum}`);
+            grid.innerHTML = "";
+
+            opts.forEach((opt) => {
+                const btn = document.createElement("button");
+                btn.className = "btn-opt";
+                btn.innerText = opt;
+                btn.onclick = () => processAnswer(pNum, opt === data.c);
+                grid.appendChild(btn);
+            });
+        }
+
+        function processAnswer(pNum, isCorrect) {
+            const p = pNum === 1 ? p1 : p2;
+            if (p.isDone || !gameActive) return;
+
+            const bombArea = document.getElementById(`zone-${pNum}`);
+
+            if (isCorrect) {
+                safePlayAudio("sfx-cut");
+
+                const cables = document.getElementById(`cables-${pNum}`).children;
+                if (p.cut < 8) {
+                    cables[p.cut].classList.add("cable-cut");
+                    p.cut++;
+                }
+
+                if (p.cut >= 8) {
+                    defusePlayer(pNum);
+                } else {
+                    p.qIdx++;
+                    loadQuestion(pNum);
+                }
+
+            } else {
+                safePlayAudio("sfx-wrong");
+                
+                p.time -= 5; 
+                
+                bombArea.classList.add("shake");
+                setTimeout(() => bombArea.classList.remove("shake"), 400);
+                
+                updateTimerUI(pNum, p.time);
+                
+                if (p.time <= 0) {
+                    explodePlayer(pNum);
+                } else {
+                    p.qIdx++;
+                    loadQuestion(pNum);
+                }
+            }
+        }
+
+        function explodePlayer(pNum) {
+            const p = pNum === 1 ? p1 : p2;
+            if (p.isDone) return; 
+            
+            p.isDone = true;
+            p.time = 0;
+            updateTimerUI(pNum, 0);
+
+            safePlayAudio("sfx-boom");
+
+            const zone = document.getElementById(`zone-${pNum}`);
+            const explosion = document.createElement("div");
+            explosion.className = "explosion-fx";
+            explosion.innerHTML = "💥";
+            zone.appendChild(explosion);
+            
+            document.getElementById(`opts-${pNum}`).innerHTML = "";
+            document.getElementById(`q-${pNum}`).innerText = "HANCUR LEBUR!";
+
+            checkBothDone(); 
+        }
+
+        function defusePlayer(pNum) {
+            const p = pNum === 1 ? p1 : p2;
+            if (p.isDone) return; 
+
+            p.isDone = true;
+            safePlayAudio("sfx-win");
+
+            const zone = document.getElementById(`zone-${pNum}`);
+            const defused = document.createElement("div");
+            defused.className = "defused-fx";
+            defused.innerHTML = "<h2>🛡️ AMAN</h2><p style='font-size: 24px; margin-top:10px;'>BOM DIJINAKKAN</p>";
+            zone.appendChild(defused);
+
+            document.getElementById(`timer-${pNum}`).classList.remove("critical");
+            document.getElementById(`timer-${pNum}`).style.color = "var(--led-green)";
+            
+            document.getElementById(`opts-${pNum}`).innerHTML = "";
+            document.getElementById(`q-${pNum}`).innerText = "BOM AMAN!";
+
+            checkBothDone(); 
+        }
+
+        function checkBothDone() {
+            if (p1.isDone && p2.isDone) {
+                gameActive = false;
+                clearInterval(gameTimer);
+                safePauseAudio("sfx-tick");
+
+                setTimeout(() => {
+                    const screen = document.getElementById("global-end-screen");
+                    const title = document.getElementById("final-winner-text");
+                    
+                    const statusP1 = p1.cut >= 8 ? "<span style='color:var(--led-green);'>BERHASIL (Aman)</span>" : "<span style='color:var(--led-red);'>GAGAL (Meledak)</span>";
+                    const statusP2 = p2.cut >= 8 ? "<span style='color:var(--led-green);'>BERHASIL (Aman)</span>" : "<span style='color:var(--led-red);'>GAGAL (Meledak)</span>";
+                    
+                    title.innerHTML = `HASIL SISWA 1 : ${statusP1}<br><br>HASIL SISWA 2 : ${statusP2}`;
+
+                    screen.classList.remove("hidden");
+                }, 2500); 
+            }
+        }
+    </script>
+</body>
+</html>
